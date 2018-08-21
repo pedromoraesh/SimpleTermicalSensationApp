@@ -53,6 +53,8 @@ import java.util.Locale;
  */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
+    private static Boolean update = false;
+
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
@@ -280,6 +282,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         String lat = mLatitudeText.getText().toString();
         String longg = mLongitudeText.getText().toString();
         switch(v.getId()) {
@@ -315,24 +318,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public boolean exportData(String name, String mlat, String mlong, String sensationLevel) {
-        String path = getFilesDir().getAbsolutePath() + "/sensacaotermica/data/" ;
-        String fileName = "data.txt";
-        String data = name + ";" + mlat + ";" + mlong + ";" + sensationLevel;
-        try {
-            new File(path).mkdir();
-            File file = new File(path + fileName);
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            FileOutputStream fileOutputStream = new FileOutputStream(file, true);
-            fileOutputStream.write((data + System.getProperty("line.separator")).getBytes());
+        String FILENAME = "data.txt";
+        String data = name + ";" + mlat + ";" + mlong + ";" + sensationLevel + "\n";
 
-            return true;
-        } catch (FileNotFoundException ex) {
-            Log.d(TAG, ex.getMessage());
-        } catch (IOException ex) {
-            Log.d(TAG, ex.getMessage());
-        }
+        FileOutputStream outputStream;
+
+        try {
+             if (update) {
+                 outputStream = openFileOutput(FILENAME, Context.MODE_APPEND);
+             } else {
+                   outputStream = openFileOutput(FILENAME, Context.MODE_PRIVATE);
+                }
+                outputStream.write(data.getBytes());
+                outputStream.flush();
+                outputStream.close();
+            }
+            catch (Exception e){
+
+            }
+
+            update = true;
+
+            File file = new File(getApplicationContext().getFilesDir(), FILENAME);
+            file.setReadable(true);
+
+
+//        try {
+//            new File(path).mkdir();
+//            File file = new File(path + fileName);
+//            if (!file.exists()) {
+//                file.createNewFile();
+//            }
+//            FileOutputStream fileOutputStream = new FileOutputStream(file, true);
+//            fileOutputStream.write((data + System.getProperty("line.separator")).getBytes());
+//
+//            return true;
+//        } catch (FileNotFoundException ex) {
+//            Log.d(TAG, ex.getMessage());
+//        } catch (IOException ex) {
+//            Log.d(TAG, ex.getMessage());
+//        }
         return false;
     }
 
