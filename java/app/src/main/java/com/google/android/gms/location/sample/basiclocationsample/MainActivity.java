@@ -53,10 +53,6 @@ import java.util.Locale;
  */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
-    final static String fileName = "data.txt";
-
-    final static String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/sensacaotermica/data/" ;
-
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
@@ -319,7 +315,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public boolean exportData(String name, String mlat, String mlong, String sensationLevel) {
-
+        String path = getFilesDir().getAbsolutePath() + "/sensacaotermica/data/" ;
+        String fileName = "data.txt";
         String data = name + ";" + mlat + ";" + mlong + ";" + sensationLevel;
         try {
             new File(path).mkdir();
