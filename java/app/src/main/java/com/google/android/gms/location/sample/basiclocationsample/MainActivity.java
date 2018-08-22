@@ -29,11 +29,13 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -44,6 +46,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Locale;
 
 /**
@@ -321,44 +326,83 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String FILENAME = "data.txt";
         String data = name + ";" + mlat + ";" + mlong + ";" + sensationLevel + "\n";
 
+
+        if(!isInternetWorking()) {
+            if (hasRealRemovableSdCard(this.getApplicationContext())) {
+                writeExternalStorage(FILENAME, data);
+                update = true;
+            } else {
+                writeInternalStorage(FILENAME, data);
+                update = true;
+            }
+        }
+        else{
+            //Someway to pass data to server
+        }
+
+
+        return false;
+    }
+
+    public boolean isInternetWorking() {
+        boolean success = false;
+        try {
+            URL url = new URL("https://google.com");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(10000);
+            connection.connect();
+            success = connection.getResponseCode() == 200;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return success;
+    }
+
+    public static boolean hasRealRemovableSdCard(Context context) {
+        return ContextCompat.getExternalFilesDirs(context, null).length >= 2;
+    }
+
+    public void writeExternalStorage(String filename, String content){
+
+        File extStore = Environment.getExternalStorageDirectory();
+        // ==> /storage/emulated/0/note.txt
+        String path = extStore.getAbsolutePath() + "/" + filename;
+
+        String data = content;
+
+        try {
+            File myFile = new File(path);
+            myFile.createNewFile();
+            FileOutputStream fOut = new FileOutputStream(myFile);
+            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+            myOutWriter.append(data);
+            myOutWriter.close();
+            fOut.close();
+
+            Toast.makeText(getApplicationContext(), filename + " saved", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void writeInternalStorage(String filename, String content){
+
         FileOutputStream outputStream;
 
         try {
-             if (update) {
-                 outputStream = openFileOutput(FILENAME, Context.MODE_APPEND);
-             } else {
-                   outputStream = openFileOutput(FILENAME, Context.MODE_PRIVATE);
-                }
-                outputStream.write(data.getBytes());
-                outputStream.flush();
-                outputStream.close();
+            if (update) {
+                outputStream = openFileOutput(filename, Context.MODE_APPEND);
+            } else {
+                outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
             }
-            catch (Exception e){
+            outputStream.write(content.getBytes());
+            outputStream.flush();
+            outputStream.close();
+        }
+        catch (Exception e){
 
-            }
-
-            update = true;
-
-            File file = new File(getApplicationContext().getFilesDir(), FILENAME);
-            file.setReadable(true);
-
-
-//        try {
-//            new File(path).mkdir();
-//            File file = new File(path + fileName);
-//            if (!file.exists()) {
-//                file.createNewFile();
-//            }
-//            FileOutputStream fileOutputStream = new FileOutputStream(file, true);
-//            fileOutputStream.write((data + System.getProperty("line.separator")).getBytes());
-//
-//            return true;
-//        } catch (FileNotFoundException ex) {
-//            Log.d(TAG, ex.getMessage());
-//        } catch (IOException ex) {
-//            Log.d(TAG, ex.getMessage());
-//        }
-        return false;
+        }
     }
 
 }
